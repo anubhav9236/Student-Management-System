@@ -22,6 +22,8 @@ A web-based Student Management System developed using Python Flask and SQLite.
 ## Live Demo
 
 https://student-management-system-lx9u.onrender.com
+https://student-management-system-gold-nine.vercel.app
+https://student-management-system-lx9u.onrender.com
 
 ## Author
 
