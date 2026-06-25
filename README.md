@@ -26,3 +26,9 @@ https://student-management-system-lx9u.onrender.com
 ## Author
 
 Anubhav Batham
+## Screenshots
+
+### Dashboard
+![Dashboard](images/dashboard.png)
+
+
