@@ -1,16 +1,19 @@
 from flask import Flask, render_template, request, redirect, session
+import os
 import sqlite3
 
 app = Flask(__name__)
 app.secret_key = "student_management_secret"
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "students.db")
+
 
 # ---------------- DATABASE ----------------
 def init_db():
-    conn = sqlite3.connect("students.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    # Users table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +22,6 @@ def init_db():
     )
     """)
 
-    # Students table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS students(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,12 +43,11 @@ init_db()
 # ---------------- SIGNUP ----------------
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect("students.db")
+        conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
 
         try:
@@ -54,7 +55,6 @@ def signup():
                 "INSERT INTO users(username,password) VALUES(?,?)",
                 (username, password)
             )
-
             conn.commit()
 
         except:
@@ -62,7 +62,6 @@ def signup():
             return "Username already exists"
 
         conn.close()
-
         return redirect('/login')
 
     return render_template("signup.html")
@@ -71,12 +70,11 @@ def signup():
 # ---------------- LOGIN ----------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect("students.db")
+        conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
 
         cur.execute(
@@ -85,7 +83,6 @@ def login():
         )
 
         user = cur.fetchone()
-
         conn.close()
 
         if user:
@@ -107,11 +104,10 @@ def logout():
 # ---------------- DASHBOARD ----------------
 @app.route('/')
 def home():
-
     if 'user' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect("students.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM students")
@@ -125,7 +121,6 @@ def home():
 # ---------------- ADD STUDENT ----------------
 @app.route('/add', methods=['POST'])
 def add_student():
-
     if 'user' not in session:
         return redirect('/login')
 
@@ -135,7 +130,7 @@ def add_student():
     email = request.form['email']
     phone = request.form['phone']
 
-    conn = sqlite3.connect("students.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     cur.execute("""
@@ -153,18 +148,13 @@ def add_student():
 # ---------------- DELETE ----------------
 @app.route('/delete/<int:id>')
 def delete_student(id):
-
     if 'user' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect("students.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    cur.execute(
-        "DELETE FROM students WHERE id=?",
-        (id,)
-    )
-
+    cur.execute("DELETE FROM students WHERE id=?", (id,))
     conn.commit()
     conn.close()
 
@@ -174,13 +164,12 @@ def delete_student(id):
 # ---------------- SEARCH ----------------
 @app.route('/search')
 def search():
-
     if 'user' not in session:
         return redirect('/login')
 
-    query = request.args.get('query')
+    query = request.args.get('query', '')
 
-    conn = sqlite3.connect("students.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     cur.execute(
@@ -189,27 +178,21 @@ def search():
     )
 
     students = cur.fetchall()
-
     conn.close()
 
-    return render_template(
-        "dashboard.html",
-        students=students
-    )
+    return render_template("dashboard.html", students=students)
 
 
 # ---------------- EDIT ----------------
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_student(id):
-
     if 'user' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect("students.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     if request.method == 'POST':
-
         name = request.form['name']
         roll = request.form['roll']
         student_class = request.form['student_class']
@@ -227,19 +210,12 @@ def edit_student(id):
 
         return redirect('/')
 
-    cur.execute(
-        "SELECT * FROM students WHERE id=?",
-        (id,)
-    )
-
+    cur.execute("SELECT * FROM students WHERE id=?", (id,))
     student = cur.fetchone()
 
     conn.close()
 
-    return render_template(
-        "edit.html",
-        student=student
-    )
+    return render_template("edit.html", student=student)
 
 
 # ---------------- RUN ----------------
